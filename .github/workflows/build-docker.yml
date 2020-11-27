@@ -22,7 +22,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          repository: wallabag/wallabag
+          repository: wallabag/docker
       - name: Set up Docker Buildx
         uses: crazy-max/ghaction-docker-buildx@v1.4.0
         id: buildx
