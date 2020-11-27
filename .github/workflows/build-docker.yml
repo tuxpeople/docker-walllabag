@@ -1,0 +1,45 @@
+name: build-docker
+
+on:
+  push
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '0 3 * * 6'
+
+
+
+jobs:
+
+  buildx:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Prepare
+        id: prepare
+        run: |
+          echo ::set-output name=docker_image::ejsmit/wallabag
+          echo ::set-output name=docker_username::ejsmit
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          repository: wallabag/wallabag
+      - name: Set up Docker Buildx
+        uses: crazy-max/ghaction-docker-buildx@v1.4.0
+        id: buildx
+        with:
+          version: latest
+      - name: Docker Login
+        env:
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo "${DOCKER_PASSWORD}" | docker login --username "${{ steps.prepare.outputs.docker_username }}" --password-stdin
+      - name: Run Buildx
+        run: |
+          docker buildx build \
+            --platform linux/amd64,linux/arm/v7,linux/arm64 \
+            --tag "${{ steps.prepare.outputs.docker_image }}:latest" \
+            --output "type=image,push=true" .
+      - name: Docker Check Manifest
+        run: |
+          docker run --rm mplatform/mquery ${{ steps.prepare.outputs.docker_image }}:latest  
+        
